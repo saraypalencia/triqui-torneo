@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Triqui yiaaa</title>
+<style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #b0e0de, #c3ecec);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    transition: background 0.6s ease;
+  }
+  h1 {
+    color: #004d4d;
+    text-shadow: 2px 2px #7dd0d0;
+  }
+  .menu, .game {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .visible {
+    display: flex;
+    opacity: 1;
+  }
+  .selector {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 10px 0;
+  }
+  .option {
+    font-size: 32px;
+    background: #f0f8f8;
+    border-radius: 12px;
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.3s;
+  }
+  .option:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 15px #7dd0d0;
+  }
+  .selected {
+    border: 3px solid #008080;
+  }
+  select, input {
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+  }
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 150px);
+    grid-gap: 15px;
+    margin-top: 20px;
+    position: relative;
+  }
+  .cell {
+    width: 150px;
+    height: 150px;
+    background: #e0f2f2;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.3s;
+    user-select: none;
+  }
+  .cell:hover {
+    transform: scale(1.05);
+    background: #cdeeee;
+  }
+  #message, #scoreboard {
+    margin-top: 20px;
+    font-size: 20px;
+    color: #004d4d;
+    text-align: center;
+  }
+  button {
+    margin-top: 12px;
+    padding: 10px 20px;
+    border: none;
+    background: #008080;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s;
+  }
+  button:hover { background: #006666; }
+  #trophy {
+    font-size: 60px;
+    margin-top: 15px;
+    animation: bounce 1s infinite;
+  }
+  #winnerName {
+    font-size: 40px;
+    font-weight: bold;
+    color: #004d4d;
+    text-shadow: 3px 3px 10px #7dd0d0;
+    margin-top: 12px;
+    animation: grow 0.8s ease-in-out;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes grow {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .emoji-decoration {
+    position: absolute;
+    font-size: 22px;
+    animation: float 6s infinite;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  @keyframes float {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+  }
+
+  @media (max-width: 600px) {
+    .board {
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 10px;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      font-size: 40px;
+    }
+    #winnerName { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🏆 Triqui </h1>
+
+<!-- MENÚ -->
+<div class="menu visible" id="menu">
+  <h2>Selecciona el modo de juego</h2>
+  <select id="mode-select">
+    <option value="2p">Jugador vs Jugador</option>
+    <option value="1p">Jugador vs Computadora</option>
+  </select>
+
+  <div id="difficulty-container" style="display:none;">
+    <h3>Selecciona la dificultad</h3>
+    <select id="difficulty-select">
+      <option value="easy">🟢 Fácil</option>
+      <option value="medium">🟠 Medio</option>
+      <option value="hard">🔴 Difícil</option>
+      <option value="impossible">💀 Imposible</option>
+    </select>
+  </div>
+
+  <h3>Ingresa los nombres</h3>
+  <input type="text" id="player1-name" placeholder="Nombre Jugador 1">
+  <div id="player2-container">
+    <input type="text" id="player2-name" placeholder="Nombre Jugador 2">
+  </div>
+
+  <h3>Jugador 1 elige su forma:</h3>
+  <div class="selector" id="player1-selector"></div>
+
+  <div id="p2-shape-section">
+    <h3>Jugador 2 elige su forma:</h3>
+    <div class="selector" id="player2-selector"></div>
+  </div>
+
+  <button id="start-btn">Comenzar torneo</button>
+</div>
+
+<!-- JUEGO -->
+<div class="game" id="game">
+  <div id="scoreboard"></div>
+  <div class="board" id="board"></div>
+  <div id="message"></div>
+  <div id="winnerName"></div>
+  <button id="reset">Siguiente partida</button>
+  <button id="home">Volver al inicio</button>
+  <div id="trophy" style="display:none;">🏆</div>
+</div>
+
+<canvas id="confetti" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>
+<audio id="applause" src="https://cdn.pixabay.com/audio/2022/03/15/audio_4d3f0c6a82.mp3"></audio>
+
+<script>
+const shapes = ['💖','⭐','🌙','🎵','🐱','🦋','🔥','⚡','🍀','🌈'];
+const menu = document.getElementById('menu');
+const game = document.getElementById('game');
+const p1Selector = document.getElementById('player1-selector');
+const p2Selector = document.getElementById('player2-selector');
+const modeSelect = document.getElementById('mode-select');
+const difficultyContainer = document.getElementById('difficulty-container');
+const difficultySelect = document.getElementById('difficulty-select');
+const startBtn = document.getElementById('start-btn');
+const board = document.getElementById('board');
+const message = document.getElementById('message');
+const winnerNameDisplay = document.getElementById('winnerName');
+const resetBtn = document.getElementById('reset');
+const homeBtn = document.getElementById('home');
+const scoreboard = document.getElementById('scoreboard');
+const trophy = document.getElementById('trophy');
+const confettiCanvas = document.getElementById('confetti');
+const ctx = confettiCanvas.getContext('2d');
+const applause = document.getElementById('applause');
+const player2Container = document.getElementById('player2-container');
+const player2Input = document.getElementById('player2-name');
+const p2ShapeSection = document.getElementById('p2-shape-section');
+
+let player1Shape = '', player2Shape = '';
+let player1Name = '', player2Name = '';
+let currentPlayer = '', difficulty = 'easy';
+let cells = Array(9).fill('');
+let gameOver = false;
+let confettiParticles = [];
+let score = { p1: 0, p2: 0 };
+let round = 1;
+
+// Render de las formas
+function renderSelectors() {
+  p1Selector.innerHTML = '';
+  p2Selector.innerHTML = '';
+  shapes.forEach(shape => {
+    const opt1 = document.createElement('div');
+    opt1.className = 'option';
+    opt1.textContent = shape;
+    opt1.addEventListener('click', () => selectShape('p1', shape, opt1));
+    p1Selector.appendChild(opt1);
+
+    const opt2 = document.createElement('div');
+    opt2.className = 'option';
+    opt2.textContent = shape;
+    opt2.addEventListener('click', () => selectShape('p2', shape, opt2));
+    p2Selector.appendChild(opt2);
+  });
+}
+
+function selectShape(player, shape, element) {
+  if (player === 'p1') {
+    player1Shape = shape;
+    p1Selector.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+    element.classList.add('selected');
+    // si estamos en 1p, asignar forma distinta a la compu visualmente
+    if (modeSelect.value === '1p') {
+      player2Shape = shapes.find(s => s !== player1Shape);
+      p2Selector.querySelectorAll('.option').forEach(o => {
+        if (o.textContent === player2Shape) o.classList.add('selected'); else o.classList.remove('selected');
+      });
+    }
+  } else {
+    player2Shape = shape;
+    p2Selector.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+    element.classList.add('selected');
+  }
+}
+
+// Mostrar/ocultar elementos al cambiar modo
+modeSelect.addEventListener('change', () => {
+  if (modeSelect.value === '1p') {
+    difficultyContainer.style.display = 'block';
+    player2Container.style.display = 'none';
+    p2ShapeSection.style.display = 'none';
+    // si ya hay forma1, seleccionar forma2 automáticamente
+    if (player1Shape) {
+      player2Shape = shapes.find(s => s !== player1Shape);
+      p2Selector.querySelectorAll('.option').forEach(o => {
+        if (o.textContent === player2Shape) o.classList.add('selected'); else o.classList.remove('selected');
+      });
+    }
+  } else {
+    difficultyContainer.style.display = 'none';
+    player2Container.style.display = 'block';
+    p2ShapeSection.style.display = 'block';
+    // limpiar selección de p2 para que jugador 2 elija
+    player2Shape = '';
+    p2Selector.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  }
+});
+
+startBtn.addEventListener('click', () => {
+  player1Name = document.getElementById('player1-name').value.trim() || 'Jugador 1';
+
+  if (modeSelect.value === '1p') {
+    player2Name = 'Computadora';
+    if (!player1Shape) return alert('Elige una forma para el Jugador 1.');
+    player2Shape = shapes.find(s => s !== player1Shape);
+    // marcar visualmente en p2Selector (aunque esté oculto)
+    p2Selector.querySelectorAll('.option').forEach(o => {
+      if (o.textContent === player2Shape) o.classList.add('selected'); else o.classList.remove('selected');
+    });
+  } else {
+    player2Name = player2Input.value.trim() || 'Jugador 2';
+    if (!player1Shape || !player2Shape)
+      return alert('Elige una forma para ambos jugadores.');
+    if (player1Shape === player2Shape)
+      return alert('Los jugadores deben tener formas distintas.');
+  }
+
+  difficulty = difficultySelect.value;
+  startGame();
+});
+
+resetBtn.addEventListener('click', () => resetGame());
+homeBtn.addEventListener('click', () => {
+  game.classList.remove('visible');
+  menu.classList.add('visible');
+  resetGame();
+});
+
+// --- Lógica del juego ---
+function startGame() {
+  menu.classList.remove('visible');
+  game.classList.add('visible');
+  score = { p1: 0, p2: 0 };
+  round = 1;
+  resetBtn.textContent = "Siguiente partida";
+  resetBtn.onclick = () => resetGame();
+  updateScoreboard();
+  resetGame();
+  addEmojiDecorations();
+}
+
+function drawBoard() {
+  board.innerHTML = '';
+  cells.forEach((cell, i) => {
+    const div = document.createElement('div');
+    div.className = 'cell';
+    div.textContent = cell;
+    div.addEventListener('click', () => handleClick(i));
+    board.appendChild(div);
+  });
+}
+
+function handleClick(i) {
+  if (gameOver || cells[i] !== '') return;
+  // proteger contra jugar fuera de turno
+  if (currentPlayer !== player1Shape && currentPlayer !== player2Shape) return;
+  // registrar la jugada
+  cells[i] = currentPlayer;
+  drawBoard();
+
+  if (checkWin(currentPlayer)) {
+    gameOver = true;
+    const winner = currentPlayer === player1Shape ? 'p1' : 'p2';
+    score[winner]++;
+    updateScoreboard();
+    const winnerText = currentPlayer === player1Shape ? player1Name : player2Name;
+    message.textContent = `${winnerText} gana la partida 🎉`;
+    winnerNameDisplay.textContent = `${winnerText} gana esta ronda!`;
+    startConfetti();
+    if (round === 3) endTournament();
+    else round++;
+    return;
+  }
+
+  if (cells.every(c => c !== '')) {
+    gameOver = true;
+    message.textContent = 'Empate 😅 — se repite la ronda';
+    winnerNameDisplay.textContent = '';
+    return;
+  }
+
+  currentPlayer = currentPlayer === player1Shape ? player2Shape : player1Shape;
+  updateTurnDisplay();
+
+  if (modeSelect.value === '1p' && currentPlayer === player2Shape && !gameOver) {
+    setTimeout(computerMove, 400);
+  }
+}
+
+function resetGame() {
+  cells = Array(9).fill('');
+  currentPlayer = player1Shape;
+  gameOver = false;
+  winnerNameDisplay.textContent = '';
+  updateTurnDisplay();
+  drawBoard();
+  confettiParticles = [];
+  trophy.style.display = 'none';
+}
+
+function updateTurnDisplay() {
+  if (gameOver) return;
+  message.textContent = `Turno de: ${currentPlayer === player1Shape ? player1Name : player2Name}`;
+}
+
+function updateScoreboard() {
+  scoreboard.textContent = `🏁 ${player1Name}: ${score.p1} | ${player2Name}: ${score.p2} (Ronda ${round}/3)`;
+}
+
+function endTournament() {
+  gameOver = true;
+  let winner;
+  if (score.p1 > score.p2) winner = player1Name;
+  else if (score.p2 > score.p1) winner = player2Name;
+  else winner = 'Empate total 😅';
+  message.textContent = `🏆 ${winner} gana el torneo!`;
+  winnerNameDisplay.textContent = `${winner} es el CAMPEÓN 🏆`;
+  trophy.style.display = 'block';
+  applause.play();
+  startConfetti();
+  resetBtn.textContent = "Jugar de nuevo";
+  resetBtn.onclick = () => startGame();
+}
+
+// --- IA básica ---
+function computerMove() {
+  let move;
+  if (difficulty === 'easy') move = easyMove();
+  else if (difficulty === 'medium') move = Math.random() < 0.5 ? easyMove() : smartMove();
+  else if (difficulty === 'hard') move = smartMove();
+  else move = minimaxMove();
+  if (move != null) handleClick(move);
+}
+
+function easyMove() {
+  const empty = cells.map((c,i) => c === '' ? i : null).filter(i => i !== null);
+  if (empty.length === 0) return null;
+  return empty[Math.floor(Math.random() * empty.length)];
+}
+
+function smartMove() {
+  // 1) Gana si puede
+  for (let i = 0; i < 9; i++) {
+    if (cells[i] === '') {
+      cells[i] = player2Shape;
+      if (checkWin(player2Shape)) { cells[i] = ''; return i; }
+      cells[i] = '';
+    }
+  }
+  // 2) Bloquea al jugador
+  for (let i = 0; i < 9; i++) {
+    if (cells[i] === '') {
+      cells[i] = player1Shape;
+      if (checkWin(player1Shape)) { cells[i] = ''; return i; }
+      cells[i] = '';
+    }
+  }
+  // 3) Si no, aleatorio
+  return easyMove();
+}
+
+function minimaxMove() {
+  let best = -Infinity, move = null;
+  for (let i = 0; i < 9; i++) {
+    if (cells[i] === '') {
+      cells[i] = player2Shape;
+      let val = minimax(cells.slice(), 0, false);
+      cells[i] = '';
+      if (val > best) { best = val; move = i; }
+    }
+  }
+  return move;
+}
+
+function minimax(boardState, depth, isMaximizing) {
+  if (checkWin(player1Shape)) return -10 + depth;
+  if (checkWin(player2Shape)) return 10 - depth;
+  if (boardState.every(c => c !== '')) return 0;
+
+  if (isMaximizing) {
+    let best = -Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (boardState[i] === '') {
+        boardState[i] = player2Shape;
+        best = Math.max(best, minimax(boardState, depth + 1, false));
+        boardState[i] = '';
+      }
+    }
+    return best;
+  } else {
+    let best = Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (boardState[i] === '') {
+        boardState[i] = player1Shape;
+        best = Math.min(best, minimax(boardState, depth + 1, true));
+        boardState[i] = '';
+      }
+    }
+    return best;
+  }
+}
+
+// --- Utilidades ---
+function checkWin(shape) {
+  const combos = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  return combos.some(c => c.every(i => cells[i] === shape));
+}
+
+function startConfetti() {
+  const colors = ['#009688','#4db6ac','#80cbc4','#b2dfdb'];
+  confettiParticles = [];
+  for (let i = 0; i < 100; i++) {
+    confettiParticles.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * -window.innerHeight,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 8 + 2,
+      speed: Math.random() * 3 + 2,
+      rot: Math.random() * 360
+    });
+  }
+  animateConfetti();
+}
+
+function animateConfetti() {
+  ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiParticles.forEach(p => {
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rot * Math.PI / 180);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(0, 0, p.size, p.size * 0.6);
+    ctx.restore();
+    p.y += p.speed;
+    p.rot += 2;
+    if (p.y > window.innerHeight + 20) {
+      p.y = Math.random() * -window.innerHeight;
+      p.x = Math.random() * window.innerWidth;
+    }
+  });
+  // seguir animando mientras haya confetti y el torneo esté en estado de fin de ronda
+  if (confettiParticles.length > 0 && gameOver) {
+    requestAnimationFrame(animateConfetti);
+  }
+}
+
+function resizeCanvas() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+
+// decoraciones de emojis en tablero
+function addEmojiDecorations() {
+  // eliminar decoraciones previas
+  board.querySelectorAll('.emoji-decoration').forEach(n => n.remove());
+  const emojis = ['🌟','💫','✨','🌸','🍀','🦋','🌈','🔥'];
+  for (let i = 0; i < 10; i++) {
+    const s = document.createElement('span');
+    s.className = 'emoji-decoration';
+    // colocar relativo al tablero (no a la ventana)
+    const left = Math.random() * (board.offsetWidth || 300);
+    const top = Math.random() * (board.offsetHeight || 300);
+    s.style.left = Math.max(0, left) + 'px';
+    s.style.top = Math.max(0, top) + 'px';
+    s.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    board.appendChild(s);
+  }
+}
+
+// inicialización
+resizeCanvas();
+renderSelectors();
+updateScoreboard();
+
+// Si cambia el tamaño del contenido del tablero tras renderizar, actualizamos decoraciones
+window.addEventListener('load', () => {
+  renderSelectors();
+});
+</script>
+</body>
+</html>
+
+
+
